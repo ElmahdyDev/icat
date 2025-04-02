@@ -11,7 +11,7 @@
         @click="setMode('shortBreak')" 
         :class="{ active: currentMode === 'shortBreak' }"
       >
-        Short videos
+        Short Break
       </button>
       <button 
         @click="setMode('longBreak')" 
