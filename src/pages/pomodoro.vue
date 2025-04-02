@@ -440,7 +440,7 @@ export default {
 }
 
 /* Responsive adjustments */
-@media (max-width: 600px) {
+@media (max-width: 390px) {
   .timer-display {
     font-size: 4rem;
   }
