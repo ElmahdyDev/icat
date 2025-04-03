@@ -11,7 +11,7 @@
         @click="setMode('shortBreak')" 
         :class="{ active: currentMode === 'shortBreak' }"
       >
-        Short Break
+        Elblbl
       </button>
       <button 
         @click="setMode('longBreak')" 
