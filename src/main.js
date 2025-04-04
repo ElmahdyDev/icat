@@ -4,7 +4,7 @@ import router from './router'
 import './style.css'
 import axios from 'axios';
 
-axios.defaults.baseURL = 'http://localhost:5000/api';
+axios.defaults.baseURL = 'server.railway.internal';
 
 
 const app = createApp(App)
