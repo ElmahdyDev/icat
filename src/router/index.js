@@ -5,7 +5,7 @@ import StatisticsPage from '../pages/dashboard/statistics.vue'
 import TasksPage from '../pages/dashboard/tasks.vue'
 import PomodoroPage from '../pages/public/pomodoro.vue'
 import LoginPage from '../pages/auth/login.vue'
-import SignUpPage from '../pages/auth/signup.vue'
+import SignUpPage from '../pages/auth/Signup.vue'
 import authService from '../services/auth'
 
 const routes = [
