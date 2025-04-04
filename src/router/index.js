@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomePage from '../pages/HomePage.vue'
 import SettingsPage from '../pages/dashboard/settings.vue'
-import StatisticsPage from '../pages/dashboard/statistics.vue'
+import StatisticsPage from '../pages/dashboard/Statistics.vue'
 import TasksPage from '../pages/dashboard/tasks.vue'
 import PomodoroPage from '../pages/public/pomodoro.vue'
 import LoginPage from '../pages/auth/login.vue'
