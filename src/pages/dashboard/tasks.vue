@@ -274,37 +274,36 @@ export default {
       return;
     }
    
-    // First, let's make sure we're using the correct API endpoint
-    const API_URL = 'https://serveriicat.vercel.app/api/tasks'; // Verify this URL
+    // Make sure the URL is correct
+    const API_URL = 'https://serveriicat.vercel.app/api/tasks';
    
     const response = await fetch(API_URL, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${token}`, // Change to Bearer token format if needed
-        'x-auth-token': token, // Keep this if your API expects it
+        'x-auth-token': token,
         'Content-Type': 'application/json'
-      }
+      },
+      // Add credentials to include cookies in the request
+      credentials: 'include'
     });
    
     console.log('Response status:', response.status);
    
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Error response:', errorData);
-      throw new Error(errorData.message || `Server responded with ${response.status}`);
+      throw new Error(`Server responded with ${response.status}`);
     }
    
     const data = await response.json();
     console.log('Response data:', data);
    
-    // Set tasks based on response format
+    // Make sure this handles your data format correctly
     if (Array.isArray(data)) {
       this.tasks = data;
     } else if (data.tasks && Array.isArray(data.tasks)) {
       this.tasks = data.tasks;
     } else {
-      console.warn('Unexpected response format:', data);
       this.tasks = [];
+      console.warn('Unexpected response format:', data);
     }
   } catch (error) {
     console.error('Error fetching tasks:', error);
