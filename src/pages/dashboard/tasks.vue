@@ -338,14 +338,14 @@ export default {
     
     console.log('Sending task data:', taskData);
     
-    const response = await fetch('https://serveriicat.vercel.app/api/tasks', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(taskData)
-    });
+     const response = await fetch('https://serveriicat.vercel.app/api/tasks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': token
+          },
+          body: JSON.stringify(taskData)
+        });
     
     console.log('Add task response status:', response.status);
     
