@@ -288,7 +288,7 @@ export default {
         
         const data = await response.json();
         console.log('Tasks received:', data.length);
-        this.tasks = data || [];
+        this.tasks = data.tasks || []; // Fixed: Access tasks array from response data
         
         // Force a UI update
         this.$forceUpdate();
@@ -333,7 +333,8 @@ export default {
           throw new Error('Failed to add task');
         }
         
-        const newTask = await response.json();
+        const result = await response.json();
+        const newTask = result.task; // Fixed: Access task from response data
         this.tasks.unshift(newTask);
         this.newTask.title = '';
         this.newTask.description = '';
@@ -365,7 +366,8 @@ export default {
           throw new Error('Failed to update task');
         }
         
-        const updatedTask = await response.json();
+        const result = await response.json();
+        const updatedTask = result.task; // Fixed: Access task from response data
         
         // Update task in the list
         const index = this.tasks.findIndex(t => t._id === task._id);
@@ -466,7 +468,8 @@ export default {
           throw new Error('Failed to update task');
         }
         
-        const updatedTask = await response.json();
+        const result = await response.json();
+        const updatedTask = result.task; // Fixed: Access task from response data
         
         // Update task in the list
         const index = this.tasks.findIndex(t => t._id === updatedTask._id);
@@ -482,8 +485,7 @@ export default {
         this.showNotification('Failed to update task', 'error');
       }
     }
-  }
-}
+  }}
 </script>
 <style scoped>
 .tasks-container {
