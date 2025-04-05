@@ -234,6 +234,12 @@ export default {
     });
   },
   methods: {
+    formatDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString();
+    },
+    
     showNotification(message, type = 'info') {
       // Clear any existing timeout
       if (this.notification.timeout) {
@@ -287,11 +293,19 @@ export default {
         }
         
         const data = await response.json();
-        console.log('Tasks received:', data.length);
-        this.tasks = data.tasks || []; // Fixed: Access tasks array from response data
+        console.log('Response data:', data);
         
-        // Force a UI update
-        this.$forceUpdate();
+        // Handle different response structures
+        if (Array.isArray(data)) {
+          this.tasks = data;
+        } else if (data.tasks && Array.isArray(data.tasks)) {
+          this.tasks = data.tasks;
+        } else {
+          this.tasks = [];
+          console.warn('Unexpected response format:', data);
+        }
+        
+        console.log('Tasks loaded:', this.tasks.length);
       } catch (error) {
         console.error('Error fetching tasks:', error);
         this.showNotification('Error: ' + error.message, 'error');
@@ -310,6 +324,7 @@ export default {
       console.log('Adding task:', this.newTask.title);
       if (!this.newTask.title.trim()) {
         console.log('Task title is empty, not adding');
+        this.showNotification('Task title cannot be empty', 'error');
         return;
       }
       
@@ -320,21 +335,49 @@ export default {
           return;
         }
         
+        const taskData = {
+          ...this.newTask,
+          // Ensure date format is correct if a date is provided
+          dueDate: this.newTask.dueDate || undefined
+        };
+        
+        console.log('Sending task data:', taskData);
+        
         const response = await fetch('https://serveriicat.vercel.app/api/tasks', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'x-auth-token': token
           },
-          body: JSON.stringify(this.newTask)
+          body: JSON.stringify(taskData)
         });
         
+        console.log('Add task response status:', response.status);
+        
         if (!response.ok) {
-          throw new Error('Failed to add task');
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `Failed to add task (${response.status})`);
         }
         
         const result = await response.json();
-        const newTask = result.task; // Fixed: Access task from response data
+        console.log('Add task response:', result);
+        
+        // Handle different response structures
+        let newTask;
+        if (result.task) {
+          newTask = result.task;
+        } else if (result._id) {
+          newTask = result;
+        } else {
+          console.warn('Unexpected response format, fetching all tasks instead');
+          await this.fetchTasks();
+          this.newTask.title = '';
+          this.newTask.description = '';
+          this.newTask.dueDate = null;
+          this.showNotification('Task added successfully', 'success');
+          return;
+        }
+        
         this.tasks.unshift(newTask);
         this.newTask.title = '';
         this.newTask.description = '';
@@ -343,31 +386,51 @@ export default {
         this.showNotification('Task added successfully', 'success');
       } catch (error) {
         console.error('Error adding task:', error);
-        this.showNotification('Failed to add task', 'error');
+        this.showNotification('Failed to add task: ' + error.message, 'error');
       }
     },
     
     async toggleTaskStatus(task) {
       console.log('Toggling task status:', task._id);
       try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          this.$router.push('/login');
+          return;
+        }
+        
+        const updateData = {
+          ...task,
+          completed: !task.completed
+        };
+        
         const response = await fetch(`https://serveriicat.vercel.app/api/tasks/${task._id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'x-auth-token': localStorage.getItem('token')
+            'x-auth-token': token
           },
-          body: JSON.stringify({
-            ...task,
-            completed: !task.completed
-          })
+          body: JSON.stringify(updateData)
         });
         
         if (!response.ok) {
-          throw new Error('Failed to update task');
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `Failed to update task (${response.status})`);
         }
         
         const result = await response.json();
-        const updatedTask = result.task; // Fixed: Access task from response data
+        console.log('Update task response:', result);
+        
+        // Handle different response structures
+        let updatedTask;
+        if (result.task) {
+          updatedTask = result.task;
+        } else if (result._id) {
+          updatedTask = result;
+        } else {
+          console.warn('Unexpected response format, using local update');
+          updatedTask = { ...task, completed: !task.completed };
+        }
         
         // Update task in the list
         const index = this.tasks.findIndex(t => t._id === task._id);
@@ -382,7 +445,7 @@ export default {
         this.showNotification('Task updated successfully', 'success');
       } catch (error) {
         console.error('Error updating task:', error);
-        this.showNotification('Failed to update task', 'error');
+        this.showNotification('Failed to update task: ' + error.message, 'error');
       }
     },
     
@@ -406,7 +469,8 @@ export default {
         });
         
         if (!response.ok) {
-          throw new Error('Failed to delete task');
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `Failed to delete task (${response.status})`);
         }
         
         // Remove task from the list
@@ -420,7 +484,7 @@ export default {
         this.showNotification('Task deleted successfully', 'success');
       } catch (error) {
         console.error('Error deleting task:', error);
-        this.showNotification('Failed to delete task', 'error');
+        this.showNotification('Failed to delete task: ' + error.message, 'error');
       }
     },
     
@@ -455,21 +519,41 @@ export default {
           return;
         }
         
+        const updateData = { ...this.currentTask };
+        
         const response = await fetch(`https://serveriicat.vercel.app/api/tasks/${this.currentTask._id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             'x-auth-token': token
           },
-          body: JSON.stringify(this.currentTask)
+          body: JSON.stringify(updateData)
         });
         
         if (!response.ok) {
-          throw new Error('Failed to update task');
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `Failed to update task (${response.status})`);
         }
         
         const result = await response.json();
-        const updatedTask = result.task; // Fixed: Access task from response data
+        console.log('Save task changes response:', result);
+        
+        // Handle different response structures
+        let updatedTask;
+        if (result.task) {
+          updatedTask = result.task;
+        } else if (result._id) {
+          updatedTask = result;
+        } else {
+          console.warn('Unexpected response format, using local update');
+          updatedTask = { ...this.currentTask };
+          // Refresh all tasks to ensure consistency
+          await this.fetchTasks();
+          this.isEditMode = false;
+          this.closeTaskModal();
+          this.showNotification('Task updated successfully', 'success');
+          return;
+        }
         
         // Update task in the list
         const index = this.tasks.findIndex(t => t._id === updatedTask._id);
@@ -482,10 +566,11 @@ export default {
         this.showNotification('Task updated successfully', 'success');
       } catch (error) {
         console.error('Error saving task changes:', error);
-        this.showNotification('Failed to update task', 'error');
+        this.showNotification('Failed to update task: ' + error.message, 'error');
       }
     }
-  }}
+  }
+}
 </script>
 <style scoped>
 .tasks-container {
