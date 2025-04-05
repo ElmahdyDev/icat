@@ -279,8 +279,8 @@ export default {
         
         const response = await fetch('https://serveriicat.vercel.app/api/tasks', {
           method: 'GET',
-          headers: {
-            'x-auth-token': token,
+          header: {
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });
