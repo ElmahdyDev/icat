@@ -517,12 +517,13 @@ export default {
         const updateData = { ...this.currentTask };
         
         const response = await fetch(`https://serveriicat.vercel.app/api/tasks/${this.currentTask._id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-auth-token': token
-          },
-          body: JSON.stringify(updateData)
+           method: 'PUT',
+           headers: {
+             'Content-Type': 'application/json',
+             'x-auth-token': token,
+             'Authorization': `Bearer ${token}`
+           },
+           body: JSON.stringify(updateData)
         });
         
         if (!response.ok) {
