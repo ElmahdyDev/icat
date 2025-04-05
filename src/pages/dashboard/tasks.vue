@@ -271,7 +271,7 @@ export default {
         // Add a small delay to ensure UI updates
         await new Promise(resolve => setTimeout(resolve, 100));
         
-        const response = await fetch('http://localhost:5000/api/tasks', {
+        const response = await fetch('https://serveriicat.vercel.app/api/tasks', {
           method: 'GET',
           headers: {
             'x-auth-token': token,
@@ -320,7 +320,7 @@ export default {
           return;
         }
         
-        const response = await fetch('http://localhost:5000/api/tasks', {
+        const response = await fetch('https://serveriicat.vercel.app/api/tasks', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -349,7 +349,7 @@ export default {
     async toggleTaskStatus(task) {
       console.log('Toggling task status:', task._id);
       try {
-        const response = await fetch(`http://localhost:5000/api/tasks/${task._id}`, {
+        const response = await fetch(`https://serveriicat.vercel.app/api/tasks/${task._id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -396,7 +396,7 @@ export default {
           return;
         }
         
-        const response = await fetch(`http://localhost:5000/api/tasks/${task._id}`, {
+        const response = await fetch(`https://serveriicat.vercel.app/api/tasks/${task._id}`, {
           method: 'DELETE',
           headers: {
             'x-auth-token': token
@@ -453,7 +453,7 @@ export default {
           return;
         }
         
-        const response = await fetch(`http://localhost:5000/api/tasks/${this.currentTask._id}`, {
+        const response = await fetch(`https://serveriicat.vercel.app/api/tasks/${this.currentTask._id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
