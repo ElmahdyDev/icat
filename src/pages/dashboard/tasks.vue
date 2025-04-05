@@ -264,53 +264,48 @@ export default {
     async fetchTasks() {
   console.log('Fetching tasks...');
   this.loading = true;
-  
+ 
   try {
     const token = localStorage.getItem('token');
     console.log('Token available:', !!token);
-    
+   
     if (!token) {
       this.$router.push('/login');
       return;
     }
-    
-    console.log('Making request to:', 'https://serveriicat.vercel.app/api/tasks');
-    
-    const response = await fetch('https://serveriicat.vercel.app/api/tasks', {
+   
+    // First, let's make sure we're using the correct API endpoint
+    const API_URL = 'https://serveriicat.vercel.app/api/tasks'; // Verify this URL
+   
+    const response = await fetch(API_URL, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${token}`, // Change to Bearer token format if needed
+        'x-auth-token': token, // Keep this if your API expects it
         'Content-Type': 'application/json'
       }
     });
-    
+   
     console.log('Response status:', response.status);
-    console.log('Response headers:', Object.fromEntries([...response.headers]));
-    
-    const responseText = await response.text();
-    console.log('Raw response:', responseText);
-    
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch (e) {
-      console.error('Failed to parse JSON:', e);
-      throw new Error('Invalid response format from server');
+   
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Error response:', errorData);
+      throw new Error(errorData.message || `Server responded with ${response.status}`);
     }
-    
-    console.log('Parsed response data:', data);
-    
-    // Handle different response structures
+   
+    const data = await response.json();
+    console.log('Response data:', data);
+   
+    // Set tasks based on response format
     if (Array.isArray(data)) {
       this.tasks = data;
     } else if (data.tasks && Array.isArray(data.tasks)) {
       this.tasks = data.tasks;
     } else {
-      this.tasks = [];
       console.warn('Unexpected response format:', data);
+      this.tasks = [];
     }
-    
-    console.log('Tasks loaded:', this.tasks.length);
   } catch (error) {
     console.error('Error fetching tasks:', error);
     this.showNotification('Error: ' + error.message, 'error');
@@ -321,63 +316,74 @@ export default {
 },
     
     async addTask() {
-  console.log('Adding task:', this.newTask.title);
-  if (!this.newTask.title.trim()) {
-    console.log('Task title is empty, not adding');
-    this.showNotification('Task title cannot be empty', 'error');
-    return;
-  }
-  
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      this.$router.push('/login');
-      return;
-    }
-    
-    const taskData = {
-      ...this.newTask,
-      // Ensure date format is correct if a date is provided
-      dueDate: this.newTask.dueDate || undefined
-    };
-    
-    console.log('Sending task data:', taskData);
-    console.log('Using token:', token.substring(0, 10) + '...');
-    
-    const response = await fetch('https://serveriicat.vercel.app/api/tasks', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(taskData)
-    });
-    
-    console.log('Add task response status:', response.status);
-    
-    const responseText = await response.text();
-    console.log('Raw response:', responseText);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to add task (${response.status}): ${responseText}`);
-    }
-    
-    let result;
-    try {
-      result = JSON.parse(responseText);
-    } catch (e) {
-      console.error('Failed to parse JSON:', e);
-      throw new Error('Invalid response format from server');
-    }
-    
-    console.log('Add task parsed response:', result);
-    
-    // Rest of your code...
-  } catch (error) {
-    console.error('Error adding task:', error);
-    this.showNotification('Failed to add task: ' + error.message, 'error');
-  }
-},
+      console.log('Adding task:', this.newTask.title);
+      if (!this.newTask.title.trim()) {
+        console.log('Task title is empty, not adding');
+        this.showNotification('Task title cannot be empty', 'error');
+        return;
+      }
+      
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          this.$router.push('/login');
+          return;
+        }
+        
+        const taskData = {
+          ...this.newTask,
+          // Ensure date format is correct if a date is provided
+          dueDate: this.newTask.dueDate || undefined
+        };
+        
+        console.log('Sending task data:', taskData);
+        
+        const response = await fetch('https://serveriicat.vercel.app/api/tasks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': token
+          },
+          body: JSON.stringify(taskData)
+        });
+        
+        console.log('Add task response status:', response.status);
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `Failed to add task (${response.status})`);
+        }
+        
+        const result = await response.json();
+        console.log('Add task response:', result);
+        
+        // Handle different response structures
+        let newTask;
+        if (result.task) {
+          newTask = result.task;
+        } else if (result._id) {
+          newTask = result;
+        } else {
+          console.warn('Unexpected response format, fetching all tasks instead');
+          await this.fetchTasks();
+          this.newTask.title = '';
+          this.newTask.description = '';
+          this.newTask.dueDate = null;
+          this.showNotification('Task added successfully', 'success');
+          return;
+        }
+        
+        this.tasks.unshift(newTask);
+        this.newTask.title = '';
+        this.newTask.description = '';
+        this.newTask.dueDate = null;
+        
+        this.showNotification('Task added successfully', 'success');
+      } catch (error) {
+        console.error('Error adding task:', error);
+        this.showNotification('Failed to add task: ' + error.message, 'error');
+      }
+    },
     
     async toggleTaskStatus(task) {
       console.log('Toggling task status:', task._id);
