@@ -316,74 +316,91 @@ export default {
 },
     
     async addTask() {
-      console.log('Adding task:', this.newTask.title);
-      if (!this.newTask.title.trim()) {
-        console.log('Task title is empty, not adding');
-        this.showNotification('Task title cannot be empty', 'error');
-        return;
-      }
-      
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          this.$router.push('/login');
-          return;
-        }
-        
-        const taskData = {
-          ...this.newTask,
-          // Ensure date format is correct if a date is provided
-          dueDate: this.newTask.dueDate || undefined
-        };
-        
-        console.log('Sending task data:', taskData);
-        
-        const response = await fetch(`https://serveriicat.vercel.app/api/tasks`, {
+  console.log('Adding task:', this.newTask.title);
+  if (!this.newTask.title.trim()) {
+    console.log('Task title is empty, not adding');
+    this.showNotification('Task title cannot be empty', 'error');
+    return;
+  }
+  
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      this.$router.push('/login');
+      return;
+    }
+    
+    const taskData = {
+      ...this.newTask,
+      // Ensure date format is correct if a date is provided
+      dueDate: this.newTask.dueDate || undefined
+    };
+    
+    console.log('Sending task data:', taskData);
+    
+    const response = await fetch('https://serveriicat.vercel.app/api/tasks', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(updateData)
+      body: JSON.stringify(taskData)
     });
-        
-        console.log('Add task response status:', response.status);
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `Failed to add task (${response.status})`);
-        }
-        
-        const result = await response.json();
-        console.log('Add task response:', result);
-        
-        // Handle different response structures
-        let newTask;
-        if (result.task) {
-          newTask = result.task;
-        } else if (result._id) {
-          newTask = result;
-        } else {
-          console.warn('Unexpected response format, fetching all tasks instead');
-          await this.fetchTasks();
-          this.newTask.title = '';
-          this.newTask.description = '';
-          this.newTask.dueDate = null;
-          this.showNotification('Task added successfully', 'success');
-          return;
-        }
-        
-        this.tasks.unshift(newTask);
-        this.newTask.title = '';
-        this.newTask.description = '';
-        this.newTask.dueDate = null;
-        
-        this.showNotification('Task added successfully', 'success');
-      } catch (error) {
-        console.error('Error adding task:', error);
-        this.showNotification('Failed to add task: ' + error.message, 'error');
+    
+    console.log('Add task response status:', response.status);
+    
+    const responseText = await response.text();
+    console.log('Raw response:', responseText);
+    
+    if (!response.ok) {
+      let errorMessage = `Failed to add task (${response.status})`;
+      try {
+        const errorData = JSON.parse(responseText);
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+        // If response is not JSON, use the raw text
+        errorMessage = responseText || errorMessage;
       }
-    },
+      throw new Error(errorMessage);
+    }
+    
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (e) {
+      console.error('Failed to parse JSON:', e);
+      throw new Error('Invalid response format from server');
+    }
+    
+    console.log('Add task parsed response:', result);
+    
+    // Handle different response structures
+    let newTask;
+    if (result.task) {
+      newTask = result.task;
+    } else if (result._id) {
+      newTask = result;
+    } else {
+      console.warn('Unexpected response format, fetching all tasks instead');
+      await this.fetchTasks();
+      this.newTask.title = '';
+      this.newTask.description = '';
+      this.newTask.dueDate = null;
+      this.showNotification('Task added successfully', 'success');
+      return;
+    }
+    
+    this.tasks.unshift(newTask);
+    this.newTask.title = '';
+    this.newTask.description = '';
+    this.newTask.dueDate = null;
+    
+    this.showNotification('Task added successfully', 'success');
+  } catch (error) {
+    console.error('Error adding task:', error);
+    this.showNotification('Failed to add task: ' + error.message, 'error');
+  }
+},
     
     async toggleTaskStatus(task) {
       console.log('Toggling task status:', task._id);
