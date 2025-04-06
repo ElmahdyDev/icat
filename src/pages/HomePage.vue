@@ -7,32 +7,37 @@ import Navbar from '../components/navbar.vue'
     <Navbar />
     
     <main class="container">
-      <div class="flex justify-between items-center mt-xl mb-xl">
-        <div class="text-left">
-          <h1 class="text-primary mb-md">iCAT</h1>
-          <p class="text-medium mb-lg">The best way to Study and get things done</p>
-          <button class="btn btn-primary btn-lg">Get Started</button>
+      <section class="hero">
+        <div class="hero-content">
+          <h1>iCAT</h1>
+          <p>The best way to Study and get things done with our powerful productivity tools</p>
+          <button class="btn">Get Started</button>
         </div>
         
-        <div class="flex justify-center">
-          <img src="/logo-black.png" alt="iCAT" class="img-fluid animate-float" />
+        <div class="hero-image">
+          <img src="/logo-black.png" alt="iCAT" class="animate-float" />
         </div>
-      </div>
+      </section>
       
-      <section class="card mt-xl">
-        <h2 class="mb-lg">Features</h2>
-        <div class="flex gap-lg">
-          <div class="card p-lg">
-            <h4 class="mb-md">Pomodoro Timer</h4>
-            <p>Stay focused and manage your time effectively.</p>
+      <section class="features">
+        <h2>Features</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">⏱️</div>
+            <h3>Pomodoro Timer</h3>
+            <p>Stay focused and manage your time effectively with customizable work and break intervals.</p>
           </div>
-          <div class="card p-lg">
-            <h4 class="mb-md">Smart Notes</h4>
-            <p>Take and organize your study notes.</p>
+          
+          <div class="feature-card">
+            <div class="feature-icon">📝</div>
+            <h3>Smart Notes</h3>
+            <p>Take and organize your study notes with our intelligent note-taking system that adapts to your needs.</p>
           </div>
-          <div class="card p-lg">
-            <h4 class="mb-md">Study Stats</h4>
-            <p>Track your progress with detailed statistics.</p>
+          
+          <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Study Stats</h3>
+            <p>Track your progress with detailed statistics and visualize your improvement over time.</p>
           </div>
         </div>
       </section>
