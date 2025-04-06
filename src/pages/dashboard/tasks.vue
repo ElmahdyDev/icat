@@ -214,7 +214,7 @@ export default {
       isEditMode: false
     };
   },
-  computed: {
+   computed: {
     filteredTasks() {
       if (this.filterType === 'all') {
         return this.tasks;
@@ -234,6 +234,10 @@ export default {
     });
   },
   methods: {
+    filterTasks(type) {
+      this.filterType = type;
+    },
+    
     formatDate(dateString) {
       if (!dateString) return '';
       const date = new Date(dateString);
