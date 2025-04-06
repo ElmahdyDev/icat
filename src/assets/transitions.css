@@ -1,0 +1,20 @@
+.page-enter-active,
+.page-leave-active {
+  transition: transform 0.3s ease-out;
+}
+
+.page-enter-from.swipe-left {
+  transform: translateX(100%);
+}
+
+.page-leave-to.swipe-left {
+  transform: translateX(-100%);
+}
+
+.page-enter-from.swipe-right {
+  transform: translateX(-100%);
+}
+
+.page-leave-to.swipe-right {
+  transform: translateX(100%);
+}
