@@ -1,30 +1,28 @@
 <template>
   <div class="pomodoro-container">
     <div class="mode-selector">
-      <button 
-        @click="setMode('pomodoro')" 
+      <button
+        @click="setMode('pomodoro')"
         :class="{ active: currentMode === 'pomodoro' }"
       >
         Pomodoro
       </button>
-      <button 
-        @click="setMode('shortBreak')" 
+      <button
+        @click="setMode('shortBreak')"
         :class="{ active: currentMode === 'shortBreak' }"
       >
         Short Break
       </button>
-      <button 
-        @click="setMode('longBreak')" 
+      <button
+        @click="setMode('longBreak')"
         :class="{ active: currentMode === 'longBreak' }"
       >
         Long Break
       </button>
     </div>
-
     <div class="timer-display">
       <span class="time">{{ formattedTime }}</span>
     </div>
-
     <div class="controls">
       <button class="control-btn" @click="toggleTimer">
         {{ isRunning ? 'Pause' : 'Start' }}
@@ -33,59 +31,56 @@
         Reset
       </button>
     </div>
-
     <div class="settings">
       <div class="setting-group">
         <label>Pomodoro (minutes)</label>
-        <input 
-          type="number" 
-          v-model.number="settings.pomodoroTime" 
-          min="1" 
+        <input
+          type="number"
+          v-model.number="settings.pomodoroTime"
+          min="1"
           max="60"
           :disabled="isRunning"
         >
       </div>
       <div class="setting-group">
         <label>Short Break (minutes)</label>
-        <input 
-          type="number" 
-          v-model.number="settings.shortBreakTime" 
-          min="1" 
+        <input
+          type="number"
+          v-model.number="settings.shortBreakTime"
+          min="1"
           max="15"
           :disabled="isRunning"
         >
       </div>
       <div class="setting-group">
         <label>Long Break (minutes)</label>
-        <input 
-          type="number" 
-          v-model.number="settings.longBreakTime" 
-          min="1" 
+        <input
+          type="number"
+          v-model.number="settings.longBreakTime"
+          min="1"
           max="30"
           :disabled="isRunning"
         >
       </div>
       <div class="setting-group">
         <label>Pomodoros before long break</label>
-        <input 
-          type="number" 
-          v-model.number="settings.pomodorosBeforeLongBreak" 
-          min="1" 
+        <input
+          type="number"
+          v-model.number="settings.pomodorosBeforeLongBreak"
+          min="1"
           max="10"
           :disabled="isRunning"
         >
       </div>
     </div>
-
     <div class="pomodoro-count">
       <span>Completed Pomodoros: {{ completedPomodoros }}</span>
     </div>
-
     <div class="task-section" v-if="settings.enableTaskTracking">
       <h3>Current Task</h3>
-      <input 
-        type="text" 
-        v-model="currentTask" 
+      <input
+        type="text"
+        v-model="currentTask"
         placeholder="What are you working on?"
         @keyup.enter="startTimer"
       >
@@ -95,7 +90,6 @@
         </li>
       </ul>
     </div>
-
     <audio ref="alarmSound" src="@/assets/alarm.mp3" preload="auto"></audio>
   </div>
 </template>
@@ -116,6 +110,8 @@ export default {
     const currentTask = ref('')
     const taskStartTime = ref(null)
     const taskHistory = ref([])
+    const timerCompleted = ref(false)
+    const nextMode = ref(null)
 
     // Settings
     const settings = ref({
@@ -123,23 +119,21 @@ export default {
       shortBreakTime: 5,
       longBreakTime: 15,
       pomodorosBeforeLongBreak: 4,
-      autoStartNextRound: true,
+      autoStartNextRound: false,
       enableTaskTracking: true,
       alarmVolume: 0.5
     })
 
-    // Initialize timer
     onMounted(() => {
       loadSettings()
       resetTimer()
     })
 
-    // Clean up interval when component unmounts
     onUnmounted(() => {
       clearInterval(timerInterval.value)
     })
 
-    // Load settings from localStorage
+    // localStorage
     const loadSettings = () => {
       const savedSettings = localStorage.getItem('pomodoroSettings')
       if (savedSettings) {
@@ -147,12 +141,10 @@ export default {
       }
     }
 
-    // Save settings to localStorage
     const saveSettings = () => {
       localStorage.setItem('pomodoroSettings', JSON.stringify(settings.value))
     }
 
-    // Watch for settings changes
     watch(settings, (newSettings) => {
       saveSettings()
       if (!isRunning.value) {
@@ -160,24 +152,30 @@ export default {
       }
     }, { deep: true })
 
-    // Format time as MM:SS
+  // Timer functions
     const formattedTime = computed(() => {
       const minutes = Math.floor(timeLeft.value / 60)
       const seconds = timeLeft.value % 60
       return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
     })
 
-    // Set the current mode
     const setMode = (mode) => {
       currentMode.value = mode
+      timerCompleted.value = false
+      nextMode.value = null
       resetTimer()
     }
 
-    // Start the timer
     const startTimer = () => {
       if (isRunning.value) return
       
-      // Start task tracking if enabled
+      if (timerCompleted.value && nextMode.value) {
+        currentMode.value = nextMode.value
+        timerCompleted.value = false
+        nextMode.value = null
+        resetTimer()
+      }
+      
       if (settings.value.enableTaskTracking && currentTask.value && !taskStartTime.value) {
         taskStartTime.value = new Date()
       }
@@ -229,7 +227,6 @@ export default {
       pauseTimer()
       playAlarm()
       
-      // Record task if tracking is enabled
       if (settings.value.enableTaskTracking && taskStartTime.value && currentTask.value) {
         const endTime = new Date()
         const duration = (endTime - taskStartTime.value) / 1000 // in seconds
@@ -241,26 +238,22 @@ export default {
         taskStartTime.value = null
       }
       
-      // Update pomodoro count
       if (currentMode.value === 'pomodoro') {
         completedPomodoros.value += 1
         
-        // Check if it's time for a long break
+     
         if (completedPomodoros.value % settings.value.pomodorosBeforeLongBreak === 0) {
-          currentMode.value = 'longBreak'
+          nextMode.value = 'longBreak'
         } else {
-          currentMode.value = 'shortBreak'
+          nextMode.value = 'shortBreak'
         }
       } else {
-        currentMode.value = 'pomodoro'
+        
+        nextMode.value = 'pomodoro'
       }
-      
-      resetTimer()
-      
-      // Auto-start next round if enabled
-      if (settings.value.autoStartNextRound) {
-        startTimer()
-      }
+
+      timerCompleted.value = true
+      timeLeft.value = 0
     }
 
     // Play alarm sound
