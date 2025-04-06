@@ -237,7 +237,7 @@ p {
 .fw-medium { font-weight: 500; }
 .fw-bold { font-weight: 700; }
 
-/* Home page responsiveness */
+/* Home page */
 /* Hero section */
 .hero {
   display: grid;
@@ -250,6 +250,7 @@ p {
 .hero-content h1 {
   font-size: 3.5rem;
   font-weight: 800;
+  color: #080000;
   margin-bottom: 16px;
   background: linear-gradient(90deg, var(--primary), var(--secondary));
   -webkit-background-clip: text;
