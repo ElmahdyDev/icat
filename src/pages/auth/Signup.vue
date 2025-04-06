@@ -48,11 +48,9 @@
           <label for="grade">Grade</label>
           <select id="grade" v-model="grade" required>
             <option value="" disabled>Select your grade</option>
-            <option value="freshman">Freshman</option>
-            <option value="sophomore">Sophomore</option>
-            <option value="junior">Junior</option>
-            <option value="senior">Senior</option>
-            <option value="graduate">Graduate</option>
+            <option value="freshman">Low School</option>
+            <option value="sophomore">Middle School</option>
+            <option value="junior">High School</option>
           </select>
         </div>
         
