@@ -2,9 +2,6 @@
 import Navbar from '../components/navbar.vue'
 
 export default {
-  components: {
-    Navbar
-  },
   mounted() {
     // Intersection Observer for fade-in animations
     const observer = new IntersectionObserver((entries) => {
