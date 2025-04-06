@@ -64,7 +64,7 @@ export default {
     },
     closeMenu() {
       this.isMenuOpen = false
-    }
+    },
     checkAuthStatus() {
       this.isLoggedIn = authService.isAuthenticated();
       if (this.isLoggedIn) {
