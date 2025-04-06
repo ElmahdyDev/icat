@@ -3,14 +3,29 @@
     <div class="nav-container">
       <router-link to="/" class="nav-logo">iCat</router-link>
       
-      <div class="nav-links">
-        <router-link to="/" class="nav-link">Home</router-link>
-        <router-link to="/tasks" class="nav-link">Tasks</router-link>
-        <router-link to="/pomodoro" class="nav-link">Pomodoro</router-link>
-        <router-link to="/settings" class="nav-link">Settings</router-link>
+      <button class="menu-toggle" @click="toggleMenu" aria-label="Toggle menu">
+        <span class="hamburger"></span>
+      </button>
+      
+      <div class="nav-links" :class="{ 'active': isMenuOpen }">
+        <router-link to="/" class="nav-link" @click="closeMenu">Home</router-link>
+        <router-link to="/tasks" class="nav-link" @click="closeMenu">Tasks</router-link>
+        <router-link to="/pomodoro" class="nav-link" @click="closeMenu">Pomodoro</router-link>
+        <router-link to="/settings" class="nav-link" @click="closeMenu">Settings</router-link>
+        
+        <div class="auth-links-mobile">
+          <template v-if="isLoggedIn">
+            <span class="username">{{ username }}</span>
+            <button @click="logout" class="logout-btn">Logout</button>
+          </template>
+          <template v-else>
+            <router-link to="/login" class="auth-link" @click="closeMenu">Login</router-link>
+            <router-link to="/signup" class="auth-link signup" @click="closeMenu">Sign Up</router-link>
+          </template>
+        </div>
       </div>
       
-      <div class="auth-links">
+      <div class="auth-links desktop-only">
         <template v-if="isLoggedIn">
           <span class="username">{{ username }}</span>
           <button @click="logout" class="logout-btn">Logout</button>
@@ -30,6 +45,7 @@ import authService from '../services/auth';
 export default {
   data() {
     return {
+      isMenuOpen: false,
       isLoggedIn: false,
       username: ''
     };
@@ -39,11 +55,16 @@ export default {
   },
   watch: {
     $route() {
-      // Check auth status on route change
       this.checkAuthStatus();
     }
   },
   methods: {
+    toggleMenu() {
+      this.isMenuOpen = !this.isMenuOpen
+    },
+    closeMenu() {
+      this.isMenuOpen = false
+    }
     checkAuthStatus() {
       this.isLoggedIn = authService.isAuthenticated();
       if (this.isLoggedIn) {
