@@ -18,7 +18,6 @@ export default {
   }
 }
 </script>
-
 <template>
   <div class="page-wrapper">
     <Navbar />

@@ -6,6 +6,7 @@ import TasksPage from '../pages/dashboard/tasks.vue'
 import PomodoroPage from '../pages/public/pomodoro.vue'
 import LoginPage from '../pages/auth/login.vue'
 import SignUpPage from '../pages/auth/Signup.vue'
+import NotFound from '../pages/NotFound.vue'
 import authService from '../services/auth'
 
 const routes = [
@@ -44,6 +45,12 @@ const routes = [
     name: 'Tasks',
     component: TasksPage,
     meta: { requiresAuth: true }
+  },
+  // Catch-all route for 404 pages
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: NotFound
   }
 ]
 
@@ -52,22 +59,18 @@ const router = createRouter({
   routes
 })
 
-// Navigation guard to check authentication for protected routes
+// Check authentication for protected routes
 router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
-    // This route requires auth, check if logged in
     if (!authService.isAuthenticated()) {
-      // Not logged in, redirect to login page
       next({
         path: '/login',
         query: { redirect: to.fullPath }
       })
     } else {
-      // Logged in, proceed to route
       next()
     }
   } else {
-    // Not a protected route, proceed
     next()
   }
 })
