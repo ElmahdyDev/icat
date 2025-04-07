@@ -107,6 +107,7 @@ p {
   border-radius: var(--radius-md);
   font-weight: 600;
   text-align: center;
+  text-decoration: none;
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
