@@ -56,7 +56,10 @@
     </div>
     
     <transition-group name="task-list" tag="ul" class="tasks-list">
-      <li v-for="(task, index) in filteredTasks" :key="task._id" class="task-item" :class="{ completed: task.completed }">
+      <li v-for="task in filteredTasks" :key="task._id" class="task-item" :class="{ completed: task.completed }"
+        @touchstart.passive="startRaising(task._id, $event)"
+        @touchmove.passive="handleTouchMove($event)"
+        @touchend="endRaising">
         <div class="task-checkbox">
           <input
             type="checkbox"
@@ -81,15 +84,8 @@
             </span>
           </div>
         </div>
-        
-        <!-- New Raise Button (only for desktop using CSS media query) -->
-        <button class="raise-button" 
-          @mousedown.prevent="startRaising(index)" 
-          @mouseup.prevent="stopRaising" 
-          @mouseleave.prevent="stopRaising">
-          ↑
-        </button>
 
+        <button class="raise-button" @click.stop="raiseTask(task)">↑</button>
         <button class="delete-button" @click.stop="deleteTask(task)">
           <span>×</span>
         </button>
@@ -220,7 +216,8 @@ export default {
       currentTask: null,
       originalTask: null,
       isEditMode: false,
-      raisingInterval: null  // to support continuous raising
+      activeTask: null,
+      touchStartY: null
     };
   },
    computed: {
@@ -606,27 +603,32 @@ export default {
         this.showNotification('Failed to update task: ' + error.message, 'error');
       }
     },
+    
+    startRaising(taskId, event) {
+      this.touchStartY = event.touches[0].clientY;
+      this.activeTask = taskId;
+  },
 
-    // New methods for raising a task
-    startRaising(index) {
-      // Immediately raise once, then continue raising while held
-      this.raiseTask(index);
-      this.raisingInterval = setInterval(() => {
-        this.raiseTask(index);
-      }, 500);
-    },
-    stopRaising() {
-      clearInterval(this.raisingInterval);
-      this.raisingInterval = null;
-    },
-    raiseTask(index) {
-      if (index > 0) {
-        // Swap tasks in the tasks array
-        const temp = this.tasks[index - 1];
-        this.$set(this.tasks, index - 1, this.tasks[index]);
-        this.$set(this.tasks, index, temp);
-      }
+  handleTouchMove(event) {
+  if (!this.activeTask || !this.touchStartY) return;
+  const currentY = event.touches[0].clientY;
+  const deltaY = this.touchStartY - currentY;
+
+  if (deltaY > 50) {
+    const index = this.tasks.findIndex(t => t._id === this.activeTask);
+    if (index > 0) {
+      const temp = this.tasks[index - 1];
+      this.$set(this.tasks, index - 1, this.tasks[index]);
+      this.$set(this.tasks, index, temp);
+      this.touchStartY = currentY;
     }
+  }
+  },
+
+    endRaising() {
+      this.activeTask = null;
+      this.touchStartY = null;
+    },
   }
 }
 </script>
@@ -883,6 +885,26 @@ export default {
   color: #ff3b30;
 }
 
+.raise-button {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 10px;
+  transition: color 0.2s ease;
+}
+
+.raise-button:hover {
+  color: #007aff;
+}
+
+@media (max-width: 768px) {
+  .raise-button {
+    display: none;
+  }
+}
+
 /* Task list animations */
 .task-list-enter-active, .task-list-leave-active {
   transition: all 0.5s ease;
@@ -1058,26 +1080,5 @@ export default {
 
 .cancel-button:hover {
   background-color: #e6e6e6;
-}
-
-.raise-button {
-  background: transparent;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-  margin-right: 5px;
-  color: #007aff;
-  transition: transform 0.2s;
-}
-
-.raise-button:hover {
-  transform: translateY(-2px);
-}
-
-/* Hide the raise button on mobile (using media query for example) */
-@media (max-width: 768px) {
-  .raise-button {
-    display: none;
-  }
 }
 </style>
