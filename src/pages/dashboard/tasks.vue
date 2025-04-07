@@ -56,10 +56,15 @@
     </div>
     
     <transition-group name="task-list" tag="ul" class="tasks-list">
-      <li v-for="task in filteredTasks" :key="task._id" class="task-item" :class="{ completed: task.completed }"
+      <li
+        v-for="task in filteredTasks"
+        :key="task._id"
+        class="task-item"
+        :class="{ completed: task.completed }"
         @touchstart.passive="startRaising(task._id, $event)"
         @touchmove.passive="handleTouchMove($event)"
         @touchend="endRaising">
+        
         <div class="task-checkbox">
           <input
             type="checkbox"
@@ -85,7 +90,7 @@
           </div>
         </div>
 
-        <button class="raise-button" @click.stop="raiseTask(task)">↑</button>
+        <button class="raise-button" @click.stop="raiseTask(task)" v-if="!isMobile">↑</button>
         <button class="delete-button" @click.stop="deleteTask(task)">
           <span>×</span>
         </button>
@@ -221,6 +226,9 @@ export default {
     };
   },
    computed: {
+    isMobile() {
+    return window.matchMedia('(max-width: 768px)').matches;
+  },
     filteredTasks() {
       if (this.filterType === 'all') {
         return this.tasks;
@@ -509,6 +517,15 @@ export default {
         this.showNotification('Failed to delete task: ' + error.message, 'error');
       }
     },
+
+    raiseTask(task) {
+      const index = this.tasks.findIndex(t => t._id === task._id);
+      if (index > 0) {
+        const newTasks = [...this.tasks];
+        [newTasks[index - 1], newTasks[index]] = [newTasks[index], newTasks[index - 1]];
+        this.tasks = newTasks;
+      }
+    },
     
     openTaskDetails(task) {
       this.currentTask = { ...task };
@@ -605,30 +622,32 @@ export default {
     },
     
     startRaising(taskId, event) {
-      this.touchStartY = event.touches[0].clientY;
-      this.activeTask = taskId;
+    this.touchStartY = event.touches[0].clientY;
+    this.activeTask = taskId;
   },
 
   handleTouchMove(event) {
-  if (!this.activeTask || !this.touchStartY) return;
-  const currentY = event.touches[0].clientY;
-  const deltaY = this.touchStartY - currentY;
-
-  if (deltaY > 50) {
-    const index = this.tasks.findIndex(t => t._id === this.activeTask);
-    if (index > 0) {
-      const temp = this.tasks[index - 1];
-      this.$set(this.tasks, index - 1, this.tasks[index]);
-      this.$set(this.tasks, index, temp);
-      this.touchStartY = currentY;
+    if (!this.activeTask || !this.touchStartY) return;
+    
+    const currentY = event.touches[0].clientY;
+    const deltaY = this.touchStartY - currentY;
+    
+    if (deltaY > 50) { // Threshold for moving up
+      const index = this.tasks.findIndex(t => t._id === this.activeTask);
+      if (index > 0) {
+        // Use the same logic as raiseTask
+        const newTasks = [...this.tasks];
+        [newTasks[index - 1], newTasks[index]] = [newTasks[index], newTasks[index - 1]];
+        this.tasks = newTasks;
+        this.touchStartY = currentY;
+      }
     }
-  }
   },
 
-    endRaising() {
-      this.activeTask = null;
-      this.touchStartY = null;
-    },
+  endRaising() {
+    this.activeTask = null;
+    this.touchStartY = null;
+  },
   }
 }
 </script>
@@ -893,6 +912,7 @@ export default {
   cursor: pointer;
   padding: 0 10px;
   transition: color 0.2s ease;
+  margin-right: 5px;
 }
 
 .raise-button:hover {
