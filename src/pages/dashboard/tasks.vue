@@ -90,7 +90,9 @@
           </div>
         </div>
 
-        <button class="raise-button" @click.stop="raiseTask(task)" v-if="!isMobile">↑</button>
+        <button class="raise-button" @click.stop="raiseTask(task)" v-if="!isMobile" title="Move Up">
+          <font-awesome-icon icon="arrow-up" />
+        </button>
         <button class="delete-button" @click.stop="deleteTask(task)">
           <span>×</span>
         </button>
@@ -908,15 +910,19 @@ export default {
   background: none;
   border: none;
   color: #666;
-  font-size: 20px;
   cursor: pointer;
-  padding: 0 10px;
+  padding: 5px 8px;
   transition: color 0.2s ease;
   margin-right: 5px;
 }
 
 .raise-button:hover {
   color: #007aff;
+}
+
+.raise-button svg {
+  width: 16px;
+  height: 16px;
 }
 
 @media (max-width: 768px) {
