@@ -28,7 +28,7 @@ export default {
         <div class="hero-content">
           <h1>iCAT</h1>
           <p>The best way to Study and get things done with our powerful productivity tools</p>
-          <button class="btn">Get Started</button>
+          <button class="btn"><RouterLink to="/signup">Get Started</RouterLink></button>
         </div>
         
         <div class="hero-image">
