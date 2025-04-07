@@ -90,7 +90,7 @@
           </div>
         </div>
 
-        <button class="raise-button" @click.stop="raiseTask(task)" v-if="!isMobile" title="Move Up">
+        <button class="raise-button" @click.stop="raiseTask(task)" v-if="!isMobile">
           <font-awesome-icon icon="arrow-up" />
         </button>
         <button class="delete-button" @click.stop="deleteTask(task)">
